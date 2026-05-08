@@ -1,0 +1,6 @@
+- Create a new task with a due date, a title and a description
+- Show list of tasks
+- Delete a task
+- Mark a task as done
+- Edit tasks content
+- Mark a task as overdue if current date is grater than due date
