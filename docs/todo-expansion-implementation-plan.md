@@ -10,8 +10,8 @@ The expansion covers the functional requirements documented in `docs/functional-
 
 - [x] Define phased implementation plan and acceptance criteria
 - [x] Phase 1: Backend foundations
-- [ ] Phase 2: Frontend feature alignment
-- [ ] Phase 3: End-to-end user journeys
+- [x] Phase 2: Frontend feature alignment
+- [x] Phase 3: End-to-end user journeys
 - [ ] Phase 4: Documentation and release readiness
 
 ## Phase 1: Backend Foundations
@@ -27,28 +27,28 @@ The expansion covers the functional requirements documented in `docs/functional-
 
 ## Phase 2: Frontend Feature Alignment
 
-- [ ] Update UI state and API calls to the task contract
-- [ ] Implement add-task flow with title, description, due date
-- [ ] Render task list with done and overdue visual states
-- [ ] Implement edit, delete, and mark-done interactions
-- [ ] Add confirmation for destructive actions
-- [ ] Ensure responsive behavior and accessibility compliance
-- [ ] Add frontend unit/component tests for critical interactions
+- [x] Update UI state and API calls to the task contract
+- [x] Implement add-task flow with title, description, due date
+- [x] Render task list with done and overdue visual states
+- [x] Implement edit, delete, and mark-done interactions
+- [x] Add confirmation for destructive actions
+- [x] Ensure responsive behavior and accessibility compliance
+- [x] Add frontend unit/component tests for critical interactions
 
 ## Phase 3: End-to-End User Journeys
 
-- [ ] Configure Playwright journeys with Page Object Model
-- [ ] Add 5-8 critical workflows (single browser)
-- [ ] Ensure test isolation with setup/teardown
-- [ ] Validate happy path and key edge cases
+- [x] Configure Playwright journeys with Page Object Model
+- [x] Add 5-8 critical workflows (single browser)
+- [x] Ensure test isolation with setup/teardown
+- [x] Validate happy path and key edge cases
 
 ## Phase 4: Documentation and Release Readiness
 
 - [ ] Update README run/test instructions if needed
 - [ ] Verify docs reflect final API/UI behavior
-- [ ] Run full test suite (`npm run test:all`)
+- [x] Run full test suite (`npm run test:all`)
 - [ ] Resolve regressions and finalize merge-ready status
 
 ## Current Status
 
-Phase 1 backend work is now implemented and test scaffolding is in place. The next active step is Phase 2 frontend alignment against the new task endpoints.
+Phases 1-3 are implemented and validated, and the full suite (`npm run test:all`) is passing. The next active step is final documentation polish and release readiness signoff.

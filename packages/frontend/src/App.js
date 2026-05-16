@@ -2,119 +2,292 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
-  const [data, setData] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [newItem, setNewItem] = useState('');
+  const [formValues, setFormValues] = useState({ title: '', description: '', dueDate: '' });
+  const [editState, setEditState] = useState({
+    taskId: null,
+    title: '',
+    description: '',
+    dueDate: '',
+  });
 
   useEffect(() => {
-    fetchData();
+    fetchTasks();
   }, []);
 
-  const fetchData = async () => {
+  const fetchTasks = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/items');
+      const response = await fetch('/api/tasks');
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
       const result = await response.json();
-      setData(result);
+      setTasks(result);
       setError(null);
     } catch (err) {
-      setError('Failed to fetch data: ' + err.message);
-      console.error('Error fetching data:', err);
+      setError('Failed to fetch tasks: ' + err.message);
+      console.error('Error fetching tasks:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleFormChange = (event) => {
+    const { name, value } = event.target;
+    setFormValues((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleCreateTask = async (e) => {
     e.preventDefault();
-    if (!newItem.trim()) return;
+
+    if (!formValues.title.trim() || !formValues.description.trim() || !formValues.dueDate) {
+      setError('Title, description, and due date are required');
+      return;
+    }
 
     try {
-      const response = await fetch('/api/items', {
+      const response = await fetch('/api/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: newItem }),
+        body: JSON.stringify({
+          title: formValues.title.trim(),
+          description: formValues.description.trim(),
+          dueDate: formValues.dueDate,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to add item');
+        const payload = await response.json();
+        throw new Error(payload.error || 'Failed to add task');
       }
 
       const result = await response.json();
-      setData([...data, result]);
-      setNewItem('');
+      setTasks((current) => [...current, result]);
+      setFormValues({ title: '', description: '', dueDate: '' });
+      setError(null);
     } catch (err) {
-      setError('Error adding item: ' + err.message);
-      console.error('Error adding item:', err);
+      setError('Error adding task: ' + err.message);
+      console.error('Error adding task:', err);
     }
   };
 
-  const handleDelete = async (itemId) => {
+  const handleDeleteTask = async (taskId) => {
+    const confirmed = window.confirm('Delete this task permanently?');
+    if (!confirmed) {
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/items/${itemId}`, {
+      const response = await fetch(`/api/tasks/${taskId}`, {
         method: 'DELETE',
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete item');
+        throw new Error('Failed to delete task');
       }
 
-      setData(data.filter(item => item.id !== itemId));
+      setTasks((current) => current.filter((task) => task.id !== taskId));
       setError(null);
     } catch (err) {
-      setError('Error deleting item: ' + err.message);
-      console.error('Error deleting item:', err);
+      setError('Error deleting task: ' + err.message);
+      console.error('Error deleting task:', err);
+    }
+  };
+
+  const handleToggleComplete = async (task) => {
+    try {
+      const response = await fetch(`/api/tasks/${task.id}/complete`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ completed: !task.completed }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update completion status');
+      }
+
+      const updated = await response.json();
+      setTasks((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+      setError(null);
+    } catch (err) {
+      setError('Error updating task: ' + err.message);
+      console.error('Error updating task:', err);
+    }
+  };
+
+  const startEditTask = (task) => {
+    setEditState({
+      taskId: task.id,
+      title: task.title,
+      description: task.description,
+      dueDate: task.dueDate,
+    });
+  };
+
+  const handleEditChange = (event) => {
+    const { name, value } = event.target;
+    setEditState((current) => ({ ...current, [name]: value }));
+  };
+
+  const cancelEdit = () => {
+    setEditState({ taskId: null, title: '', description: '', dueDate: '' });
+  };
+
+  const submitEditTask = async (taskId) => {
+    if (!editState.title.trim() || !editState.description.trim() || !editState.dueDate) {
+      setError('Edited task must include title, description, and due date');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: editState.title.trim(),
+          description: editState.description.trim(),
+          dueDate: editState.dueDate,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to edit task');
+      }
+
+      const updated = await response.json();
+      setTasks((current) => current.map((task) => (task.id === taskId ? updated : task)));
+      cancelEdit();
+      setError(null);
+    } catch (err) {
+      setError('Error editing task: ' + err.message);
+      console.error('Error editing task:', err);
     }
   };
 
   return (
     <div className="App">
       <header className="App-header">
-        <h1>To Do App</h1>
-        <p>Keep track of your tasks</p>
+        <h1>TODO Planner</h1>
+        <p>Track tasks, due dates, and completion in one view.</p>
       </header>
 
       <main>
-        <section className="add-item-section">
-          <h2>Add New Item</h2>
-          <form onSubmit={handleSubmit}>
+        <section className="add-item-section" aria-label="Create task section">
+          <h2>Add New Task</h2>
+          <form onSubmit={handleCreateTask} className="task-form">
             <input
+              name="title"
               type="text"
-              value={newItem}
-              onChange={(e) => setNewItem(e.target.value)}
-              placeholder="Enter item name"
+              value={formValues.title}
+              onChange={handleFormChange}
+              placeholder="Task title"
+              aria-label="Task title"
             />
-            <button type="submit">Add Item</button>
+            <input
+              name="description"
+              type="text"
+              value={formValues.description}
+              onChange={handleFormChange}
+              placeholder="Task description"
+              aria-label="Task description"
+            />
+            <input
+              name="dueDate"
+              type="date"
+              value={formValues.dueDate}
+              onChange={handleFormChange}
+              aria-label="Task due date"
+            />
+            <button type="submit">Add Task</button>
           </form>
         </section>
 
-        <section className="items-section">
-          <h2>Items from Database</h2>
-          {loading && <p>Loading data...</p>}
+        <section className="items-section" aria-label="Task list section">
+          <h2>Task List</h2>
+          {loading && <p>Loading tasks...</p>}
           {error && <p className="error">{error}</p>}
           {!loading && !error && (
-            <ul>
-              {data.length > 0 ? (
-                data.map((item) => (
-                  <li key={item.id}>
-                    <span>{item.name}</span>
-                    <button 
-                      onClick={() => handleDelete(item.id)}
-                      className="delete-btn"
-                      type="button"
-                    >
-                      Delete
-                    </button>
+            <ul className="task-list">
+              {tasks.length > 0 ? (
+                tasks.map((task) => (
+                  <li key={task.id} className={`task-item ${task.completed ? 'completed' : ''}`}>
+                    {editState.taskId === task.id ? (
+                      <div className="task-edit-form">
+                        <input
+                          name="title"
+                          type="text"
+                          value={editState.title}
+                          onChange={handleEditChange}
+                          aria-label="Edit task title"
+                        />
+                        <input
+                          name="description"
+                          type="text"
+                          value={editState.description}
+                          onChange={handleEditChange}
+                          aria-label="Edit task description"
+                        />
+                        <input
+                          name="dueDate"
+                          type="date"
+                          value={editState.dueDate}
+                          onChange={handleEditChange}
+                          aria-label="Edit task due date"
+                        />
+                        <div className="task-actions">
+                          <button type="button" onClick={() => submitEditTask(task.id)}>
+                            Save
+                          </button>
+                          <button type="button" onClick={cancelEdit} className="secondary-btn">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="task-content">
+                          <h3>{task.title}</h3>
+                          <p>{task.description}</p>
+                          <div className="task-meta">
+                            <span>Due: {task.dueDate}</span>
+                            {task.completed && <span className="status done">Done</span>}
+                            {task.isOverdue && <span className="status overdue">Overdue</span>}
+                          </div>
+                        </div>
+                        <div className="task-actions">
+                          <button type="button" onClick={() => handleToggleComplete(task)}>
+                            {task.completed ? 'Mark Active' : 'Mark Done'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => startEditTask(task)}
+                            className="secondary-btn"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTask(task.id)}
+                            className="delete-btn"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </li>
                 ))
               ) : (
-                <p>No items found. Add some!</p>
+                <p className="empty-state">No tasks yet. Add your first task to get started.</p>
               )}
             </ul>
           )}
