@@ -12,7 +12,7 @@ The expansion covers the functional requirements documented in `docs/functional-
 - [x] Phase 1: Backend foundations
 - [x] Phase 2: Frontend feature alignment
 - [x] Phase 3: End-to-end user journeys
-- [ ] Phase 4: Documentation and release readiness
+- [x] Phase 4: Documentation and release readiness
 
 ## Phase 1: Backend Foundations
 
@@ -44,11 +44,11 @@ The expansion covers the functional requirements documented in `docs/functional-
 
 ## Phase 4: Documentation and Release Readiness
 
-- [ ] Update README run/test instructions if needed
-- [ ] Verify docs reflect final API/UI behavior
+- [x] Update README run/test instructions if needed
+- [x] Verify docs reflect final API/UI behavior
 - [x] Run full test suite (`npm run test:all`)
-- [ ] Resolve regressions and finalize merge-ready status
+- [x] Resolve regressions and finalize merge-ready status
 
 ## Current Status
 
-Phases 1-3 are implemented and validated, and the full suite (`npm run test:all`) is passing. The next active step is final documentation polish and release readiness signoff.
+All phases are complete. Backend, frontend, integration, and end-to-end tests are passing, and documentation is aligned with the implemented task workflow.
